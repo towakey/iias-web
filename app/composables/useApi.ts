@@ -8,6 +8,7 @@ export function useApi() {
     const h: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      'X-Service': 'iias-web',
     }
     if (token.value) {
       h.Authorization = `Bearer ${token.value}`
