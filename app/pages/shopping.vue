@@ -4,7 +4,20 @@
       <h2 class="iias-title">購買リスト</h2>
     </header>
 
-    <div class="iias-card iias-form" style="margin-bottom: 1rem;">
+    <div class="iias-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+      <button
+        class="iias-btn"
+        :style="tab === 'active' ? 'background: rgba(255,138,28,0.2)' : ''"
+        @click="tab = 'active'"
+      >購入前</button>
+      <button
+        class="iias-btn"
+        :style="tab === 'purchased' ? 'background: rgba(255,138,28,0.2)' : ''"
+        @click="tab = 'purchased'"
+      >購入済み</button>
+    </div>
+
+    <div v-if="tab === 'active'" class="iias-card iias-form" style="margin-bottom: 1rem;">
       <h3 class="iias-card-title">アイテム追加</h3>
       <label class="iias-label">商品名</label>
       <input v-model="form.name" class="iias-input" type="text" placeholder="例：牛乳 1L" />
@@ -19,7 +32,7 @@
 
     <div class="iias-shopping-list">
       <article
-        v-for="item in visibleItems"
+        v-for="item in items"
         :key="item.id"
         :class="['iias-shopping-item', { purchased: item.status === 'purchased' }]"
       >
@@ -38,14 +51,14 @@
         <button
           v-else
           class="iias-btn"
-          @click="undo(item)"
+          @click="reactivate(item)"
         >
-          取り消し
+          再アクティブ化
         </button>
       </article>
     </div>
 
-    <div v-if="!pending && visibleItems.length === 0" class="iias-card" style="opacity: 0.7;">
+    <div v-if="!pending && items.length === 0" class="iias-card" style="opacity: 0.7;">
       アイテムがありません。
     </div>
   </div>
@@ -55,6 +68,7 @@
 const shopping = useShopping()
 const items = ref([])
 const pending = ref(false)
+const tab = ref<'active' | 'purchased'>('active')
 const form = ref({ name: '', memo: '' })
 const imageFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -67,15 +81,13 @@ function onFileChange(e: Event) {
 async function refresh() {
   pending.value = true
   try {
-    items.value = await shopping.list('active')
+    items.value = await shopping.list(tab.value)
   } finally {
     pending.value = false
   }
 }
 
-const visibleItems = computed(() =>
-  items.value.filter(i => i.status !== 'archived')
-)
+watch(tab, () => refresh())
 
 async function add() {
   if (!form.value.name) return
@@ -89,6 +101,7 @@ async function add() {
     form.value = { name: '', memo: '' }
     imageFile.value = null
     if (fileInput.value) fileInput.value.value = ''
+    tab.value = 'active'
     await refresh()
   } finally {
     pending.value = false
@@ -100,9 +113,9 @@ async function purchase(item) {
   await shopping.update(item.id, { status: 'purchased' })
 }
 
-async function undo(item) {
-  item.status = 'active'
-  await shopping.update(item.id, { status: 'active' })
+async function reactivate(item) {
+  await shopping.restore(item.id)
+  await refresh()
 }
 
 onMounted(() => {

@@ -35,5 +35,9 @@ export function useShopping() {
     return api.del(`/shopping-items/${id}`)
   }
 
-  return { list, create, update, remove }
+  async function restore(id: number) {
+    return api.post<ShoppingItem>(`/shopping-items/${id}/restore`)
+  }
+
+  return { list, create, update, remove, restore }
 }
