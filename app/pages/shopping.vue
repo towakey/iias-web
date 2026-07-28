@@ -21,6 +21,8 @@
       <h3 class="iias-card-title">アイテム追加</h3>
       <label class="iias-label">商品名</label>
       <input v-model="form.name" class="iias-input" type="text" placeholder="例：牛乳 1L" />
+      <label class="iias-label">価格（円）</label>
+      <input v-model="form.price" class="iias-input" type="number" placeholder="例：200" />
       <label class="iias-label">画像</label>
       <input ref="fileInput" type="file" accept="image/*" class="iias-input" @change="onFileChange" />
       <label class="iias-label">メモ</label>
@@ -38,6 +40,7 @@
       >
         <div class="info">
           <h3>{{ item.name }}</h3>
+          <p v-if="item.price">{{ item.price }} 円</p>
           <p v-if="item.memo">{{ item.memo }}</p>
           <img v-if="item.image_path" :src="item.image_path" alt="" style="max-width: 120px; max-height: 80px; margin-top: 0.5rem; border: 1px solid #ff8a1c;">
         </div>
@@ -69,7 +72,7 @@ const shopping = useShopping()
 const items = ref([])
 const pending = ref(false)
 const tab = ref<'active' | 'purchased'>('active')
-const form = ref({ name: '', memo: '' })
+const form = ref({ name: '', price: '', memo: '' })
 const imageFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -95,10 +98,11 @@ async function add() {
   try {
     await shopping.create({
       name: form.value.name,
+      price: form.value.price ? parseInt(form.value.price, 10) : undefined,
       memo: form.value.memo || undefined,
       status: 'active',
     }, imageFile.value || undefined)
-    form.value = { name: '', memo: '' }
+    form.value = { name: '', price: '', memo: '' }
     imageFile.value = null
     if (fileInput.value) fileInput.value.value = ''
     tab.value = 'active'

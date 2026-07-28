@@ -2,6 +2,7 @@ export type ShoppingItem = {
   id: number
   name: string
   image_path: string | null
+  price: number | null
   memo: string | null
   status: 'active' | 'purchased' | 'archived'
   purchased_at: string | null
@@ -9,6 +10,17 @@ export type ShoppingItem = {
   sort_order: number
   created_at: string
   updated_at: string
+}
+
+export type ShoppingStats = {
+  monthly_budget: number
+  total_this_month: number
+  budget_alert: boolean
+  by_name: Record<string, {
+    count: number
+    last_purchased_at: string | null
+    avg_interval_days: number | null
+  }>
 }
 
 export function useShopping() {
@@ -39,5 +51,9 @@ export function useShopping() {
     return api.post<ShoppingItem>(`/shopping-items/${id}/restore`)
   }
 
-  return { list, create, update, remove, restore }
+  async function stats() {
+    return api.get<ShoppingStats>('/shopping-items/stats')
+  }
+
+  return { list, create, update, remove, restore, stats }
 }
