@@ -10,4 +10,9 @@ export default defineNuxtConfig({
     '~/assets/css/ndma-ui.css',
     '~/assets/css/iias.css',
   ],
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: 'http://localhost:8000/api',
+    },
+  },
 })
