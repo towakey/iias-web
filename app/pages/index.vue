@@ -23,6 +23,7 @@
             <h3 class="iias-card-title">{{ item.title || '(タイトルなし)' }}</h3>
             <p v-if="item.url" class="iias-card-meta">{{ item.url }}</p>
             <p v-if="item.memo" class="iias-card-meta">{{ item.memo }}</p>
+            <p v-if="item.tags?.length" class="iias-card-meta">タグ: {{ item.tags.map(t => t.name).join(', ') }}</p>
             <p class="iias-card-meta">{{ formatDate(item.recorded_at) }}</p>
           </article>
         </div>
@@ -35,6 +36,7 @@
           <h3 class="iias-card-title">{{ item.title || '(タイトルなし)' }}</h3>
           <p v-if="item.url" class="iias-card-meta">{{ item.url }}</p>
           <p v-if="item.memo" class="iias-card-meta">{{ item.memo }}</p>
+          <p v-if="item.tags?.length" class="iias-card-meta">タグ: {{ item.tags.map(t => t.name).join(', ') }}</p>
           <p class="iias-card-meta">{{ formatDate(item.recorded_at) }}</p>
         </article>
       </div>
