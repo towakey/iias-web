@@ -23,11 +23,50 @@
           <option value="1800">30分</option>
         </select>
       </div>
+
+      <button class="iias-btn" style="width: 100%;" @click="save" :disabled="saving">
+        {{ saving ? '保存中...' : '保存' }}
+      </button>
+
+      <p v-if="message" style="margin-top: 0.75rem; font-size: 0.85rem; color: #ff8a1c;">{{ message }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
+const settingsApi = useSettings()
 const viewMode = ref('dashboard')
 const syncInterval = ref('60')
+const saving = ref(false)
+const message = ref('')
+
+async function load() {
+  try {
+    const data = await settingsApi.get()
+    if (data.view_mode) viewMode.value = String(data.view_mode)
+    if (data.sync_interval) syncInterval.value = String(data.sync_interval)
+  } catch {
+    // 初回や未取得時はデフォルトのまま
+  }
+}
+
+async function save() {
+  saving.value = true
+  message.value = ''
+  try {
+    await settingsApi.save([
+      { key: 'view_mode', value: viewMode.value, type: 'string' },
+      { key: 'sync_interval', value: syncInterval.value, type: 'string' },
+    ])
+    message.value = '設定を保存しました'
+  } catch (e) {
+    message.value = e?.data?.message || '保存に失敗しました'
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(() => {
+  load()
+})
 </script>
