@@ -55,5 +55,17 @@ export function useShopping() {
     return api.get<ShoppingStats>('/shopping-items/stats')
   }
 
-  return { list, create, update, remove, restore, stats }
+  async function getRegularItems() {
+    return api.get<any[]>('/regular-items')
+  }
+
+  async function createRegularItem(body: Partial<ShoppingItem>) {
+    return api.post<any>('/regular-items', body)
+  }
+
+  async function addRegularToShopping(id: number) {
+    return api.post<any>(`/regular-items/${id}/add-to-shopping`)
+  }
+
+  return { list, create, update, remove, restore, stats, getRegularItems, createRegularItem, addRegularToShopping }
 }
