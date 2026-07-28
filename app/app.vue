@@ -4,7 +4,7 @@
       <h1 class="iias-logo">IIAS</h1>
       <nav class="iias-nav">
         <NuxtLink to="/" class="iias-nav-link">タイムライン</NuxtLink>
-        <NuxtLink to="/shopping" class="iias-nav-link">買い物リスト</NuxtLink>
+        <NuxtLink to="/shopping" class="iias-nav-link">購買リスト</NuxtLink>
         <NuxtLink to="/settings" class="iias-nav-link">設定</NuxtLink>
       </nav>
       <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #ff8a1c;">

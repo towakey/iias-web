@@ -1,7 +1,7 @@
 <template>
   <div>
     <header class="iias-header">
-      <h2 class="iias-title">買い物リスト</h2>
+      <h2 class="iias-title">購買リスト</h2>
     </header>
 
     <div v-if="pending" class="iias-card" style="opacity: 0.7;">読み込み中...</div>
