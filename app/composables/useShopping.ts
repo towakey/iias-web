@@ -19,8 +19,12 @@ export function useShopping() {
     return api.get<ShoppingItem[]>(`/shopping-items${query}`)
   }
 
-  async function create(body: Partial<ShoppingItem>) {
-    return api.post<ShoppingItem>('/shopping-items', body)
+  async function create(body: Partial<ShoppingItem>, file?: File) {
+    const payload = { ...body }
+    if (file) {
+      payload.image_path = await api.uploadImage(file)
+    }
+    return api.post<ShoppingItem>('/shopping-items', payload)
   }
 
   async function update(id: number, body: Partial<ShoppingItem>) {

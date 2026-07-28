@@ -8,8 +8,8 @@
       <h3 class="iias-card-title">アイテム追加</h3>
       <label class="iias-label">商品名</label>
       <input v-model="form.name" class="iias-input" type="text" placeholder="例：牛乳 1L" />
-      <label class="iias-label">画像URL</label>
-      <input v-model="form.image_path" class="iias-input" type="url" placeholder="https://..." />
+      <label class="iias-label">画像</label>
+      <input ref="fileInput" type="file" accept="image/*" class="iias-input" @change="onFileChange" />
       <label class="iias-label">メモ</label>
       <input v-model="form.memo" class="iias-input" type="text" placeholder="確認用メモ" />
       <button class="iias-btn" style="width: 100%;" :disabled="!form.name" @click="add">追加</button>
@@ -51,11 +51,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const shopping = useShopping()
 const items = ref([])
 const pending = ref(false)
-const form = ref({ name: '', image_path: '', memo: '' })
+const form = ref({ name: '', memo: '' })
+const imageFile = ref<File | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function onFileChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  imageFile.value = target.files?.[0] ?? null
+}
 
 async function refresh() {
   pending.value = true
@@ -76,11 +83,12 @@ async function add() {
   try {
     await shopping.create({
       name: form.value.name,
-      image_path: form.value.image_path || undefined,
       memo: form.value.memo || undefined,
       status: 'active',
-    })
-    form.value = { name: '', image_path: '', memo: '' }
+    }, imageFile.value || undefined)
+    form.value = { name: '', memo: '' }
+    imageFile.value = null
+    if (fileInput.value) fileInput.value.value = ''
     await refresh()
   } finally {
     pending.value = false

@@ -28,6 +28,24 @@ export function useApi() {
     })
   }
 
+  async function uploadImage(file: File): Promise<string> {
+    const formData = new FormData()
+    formData.append('image', file)
+    const h: Record<string, string> = {
+      Accept: 'application/json',
+      'X-Service': 'iias-web',
+    }
+    if (token.value) {
+      h.Authorization = `Bearer ${token.value}`
+    }
+    const res = await $fetch<{ url: string }>(`${baseURL}/images`, {
+      method: 'POST',
+      body: formData,
+      headers: h,
+    })
+    return res.url
+  }
+
   async function del<T = unknown>(path: string) {
     return $fetch<T>(`${baseURL}${path}`, {
       method: 'DELETE',
@@ -50,5 +68,5 @@ export function useApi() {
     }
   }
 
-  return { get, post, del, token, setToken, loadToken }
+  return { get, post, del, uploadImage, token, setToken, loadToken }
 }
