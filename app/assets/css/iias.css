@@ -13,12 +13,13 @@ body,
 .iias-app {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: auto 1fr;
   background: #050505;
   color: #ff8a1c;
 }
 
 .iias-sidebar {
+  width: 260px;
   border-right: 1px solid #ff8a1c;
   padding: 1rem;
   display: flex;
@@ -68,6 +69,7 @@ body,
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
   border-bottom: 1px solid #ff8a1c;
   padding-bottom: 0.75rem;
   margin-bottom: 1rem;
@@ -77,10 +79,14 @@ body,
   margin: 0;
   font-size: 1.25rem;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  margin-right: auto;
 }
 
 .iias-search {
   width: 320px;
+  flex-shrink: 0;
+  margin-left: auto;
   padding: 0.5rem 0.75rem;
   background: #000;
   border: 1px solid #ff8a1c;
@@ -190,4 +196,25 @@ body,
 .iias-label {
   font-size: 0.85rem;
   color: #ff8a1c;
+}
+
+.iias-hierarchy-toggle {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 1px solid #ff8a1c;
+  color: #ff8a1c;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.iias-hierarchy-toggle:hover {
+  background: rgba(255, 138, 28, 0.15);
+}
+
+.iias-hierarchy-children {
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 138, 28, 0.4);
+  margin-top: 0.5rem;
 }
