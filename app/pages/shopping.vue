@@ -4,6 +4,8 @@
       <h2 class="iias-title">買い物リスト</h2>
     </header>
 
+    <div v-if="pending" class="iias-card" style="opacity: 0.7;">読み込み中...</div>
+
     <div class="iias-shopping-list">
       <article
         v-for="item in visibleItems"
@@ -12,7 +14,7 @@
       >
         <div class="info">
           <h3>{{ item.name }}</h3>
-          <p>{{ item.memo }}</p>
+          <p v-if="item.memo">{{ item.memo }}</p>
         </div>
         <button
           v-if="item.status !== 'purchased'"
@@ -30,25 +32,42 @@
         </button>
       </article>
     </div>
+
+    <div v-if="!pending && visibleItems.length === 0" class="iias-card" style="opacity: 0.7;">
+      アイテムがありません。
+    </div>
   </div>
 </template>
 
 <script setup>
-const items = ref([
-  { id: 1, name: '牛乳', memo: '1L', status: 'active' },
-  { id: 2, name: '食パン', memo: '6枚切り', status: 'active' },
-  { id: 3, name: 'コーヒー豆', memo: '深煎り', status: 'active' },
-])
+const shopping = useShopping()
+const items = ref([])
+const pending = ref(false)
+
+async function refresh() {
+  pending.value = true
+  try {
+    items.value = await shopping.list('active')
+  } finally {
+    pending.value = false
+  }
+}
 
 const visibleItems = computed(() =>
   items.value.filter(i => i.status !== 'archived')
 )
 
-const purchase = (item) => {
+async function purchase(item) {
   item.status = 'purchased'
+  await shopping.update(item.id, { status: 'purchased' })
 }
 
-const undo = (item) => {
+async function undo(item) {
   item.status = 'active'
+  await shopping.update(item.id, { status: 'active' })
 }
+
+onMounted(() => {
+  refresh()
+})
 </script>
