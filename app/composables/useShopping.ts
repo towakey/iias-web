@@ -1,3 +1,5 @@
+import { useOfflineDB, isOnline } from './useOfflineDB'
+
 export type ShoppingItem = {
   id: number
   name: string
@@ -23,32 +25,85 @@ export type ShoppingStats = {
   }>
 }
 
+type ApiLike = {
+  get: <T>(path: string) => Promise<T>
+  post: <T>(path: string, body?: unknown) => Promise<T>
+  del: <T>(path: string) => Promise<T>
+  uploadImage: (file: File) => Promise<string>
+}
+
 export function useShopping() {
-  const api = useApi()
+  const api = useApi() as ApiLike
+  const db = useOfflineDB()
 
   async function list(status?: ShoppingItem['status']) {
-    const query = status ? `?status=${status}` : ''
-    return api.get<ShoppingItem[]>(`/shopping-items${query}`)
+    const target = status || 'active'
+    if (isOnline()) {
+      try {
+        const items = await api.get<ShoppingItem[]>(`/shopping-items?status=${target}`)
+        await db.syncItems(items, target)
+        return items
+      } catch (e) {
+        return db.listItems(target)
+      }
+    }
+    return db.listItems(target)
   }
 
   async function create(body: Partial<ShoppingItem>, file?: File) {
-    const payload = { ...body }
-    if (file) {
-      payload.image_path = await api.uploadImage(file)
+    const payload: any = { ...body, status: 'active', sort_order: 0 }
+    if (isOnline()) {
+      if (file) payload.image_path = await api.uploadImage(file)
+      const item = await api.post<ShoppingItem>('/shopping-items', payload)
+      await db.syncItems([item], item.status)
+      return item
     }
-    return api.post<ShoppingItem>('/shopping-items', payload)
+    // オフライン時はローカル保存と同期キュー（画像は一旦保留）
+    if (file) payload.image_path = null
+    const local = await db.putItem({ ...payload } as any)
+    await db.addQueue({ method: 'POST', path: '/shopping-items', body: payload })
+    return local as ShoppingItem
   }
 
   async function update(id: number, body: Partial<ShoppingItem>) {
-    return api.post<ShoppingItem>(`/shopping-items/${id}`, { ...body, _method: 'PUT' })
+    if (isOnline()) {
+      const item = await api.post<ShoppingItem>(`/shopping-items/${id}`, { ...body, _method: 'PUT' })
+      await db.syncItems([item], item.status)
+      return item
+    }
+    const local = await db.getItem(id)
+    if (local) {
+      await db.putItem({ ...local, ...body })
+      if (id > 0) {
+        await db.addQueue({ method: 'POST', path: `/shopping-items/${id}`, body: { ...body, _method: 'PUT' } })
+      }
+    }
+    return local as ShoppingItem | undefined
   }
 
   async function remove(id: number) {
-    return api.del(`/shopping-items/${id}`)
+    if (isOnline() && id > 0) {
+      await api.del(`/shopping-items/${id}`)
+    } else if (!isOnline() && id > 0) {
+      await db.addQueue({ method: 'DELETE', path: `/shopping-items/${id}`, body: null })
+    }
+    await db.deleteItem(id)
   }
 
   async function restore(id: number) {
-    return api.post<ShoppingItem>(`/shopping-items/${id}/restore`)
+    if (isOnline()) {
+      const item = await api.post<ShoppingItem>(`/shopping-items/${id}/restore`)
+      await db.syncItems([item], 'active')
+      return item
+    }
+    const local = await db.getItem(id)
+    if (local) {
+      await db.putItem({ ...local, status: 'active' })
+      if (id > 0) {
+        await db.addQueue({ method: 'POST', path: `/shopping-items/${id}/restore`, body: null })
+      }
+    }
+    return local as ShoppingItem | undefined
   }
 
   async function stats() {
@@ -67,5 +122,28 @@ export function useShopping() {
     return api.post<any>(`/regular-items/${id}/add-to-shopping`)
   }
 
-  return { list, create, update, remove, restore, stats, getRegularItems, createRegularItem, addRegularToShopping }
+  async function processQueue() {
+    const queue = await db.getQueue()
+    for (const item of queue) {
+      try {
+        if (item.method === 'POST' && item.path === '/shopping-items') {
+          const created = await api.post<ShoppingItem>(item.path, item.body)
+          await db.syncItems([created], created.status)
+        } else if (item.method === 'POST') {
+          const updated = await api.post<ShoppingItem>(item.path, item.body)
+          await db.syncItems([updated], updated.status)
+        } else if (item.method === 'DELETE') {
+          await api.del(item.path)
+        }
+        if (item.id) await db.deleteQueueItem(item.id)
+      } catch (e) {
+        // 失敗したらキューに残す
+      }
+    }
+    // キュー処理後にサーバーと再同期
+    await list('active')
+    await list('purchased')
+  }
+
+  return { list, create, update, remove, restore, stats, getRegularItems, createRegularItem, addRegularToShopping, processQueue }
 }
