@@ -177,6 +177,18 @@ body,
   cursor: not-allowed;
 }
 
+.iias-btn-small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.iias-body-preview {
+  color: #ccc;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
 .iias-input,
 .iias-select {
   padding: 0.5rem 0.75rem;

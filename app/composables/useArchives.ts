@@ -37,5 +37,9 @@ export function useArchives() {
     return api.post<Archive>('/archives', body)
   }
 
-  return { list, create }
+  async function fetchBody(id: number) {
+    return api.post<Archive>(`/archives/${id}/fetch-body`)
+  }
+
+  return { list, create, fetchBody }
 }

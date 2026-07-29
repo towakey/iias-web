@@ -22,9 +22,11 @@
           <article v-for="item in group.items" :key="item.id" class="iias-card" style="margin-top: 0.5rem;">
             <h3 class="iias-card-title">{{ item.title || '(タイトルなし)' }}</h3>
             <p v-if="item.url" class="iias-card-meta">{{ item.url }}</p>
+            <p v-if="bodyPreview(item)" class="iias-card-meta iias-body-preview">{{ bodyPreview(item) }}</p>
             <p v-if="item.memo" class="iias-card-meta">{{ item.memo }}</p>
             <p v-if="item.tags?.length" class="iias-card-meta">タグ: {{ item.tags.map(t => t.name).join(', ') }}</p>
             <p class="iias-card-meta">{{ formatDate(item.recorded_at) }}</p>
+            <button v-if="item.url && !item.body" class="iias-btn iias-btn-small" @click="onFetchBody(item)">本文取得</button>
           </article>
         </div>
       </div>
@@ -35,9 +37,11 @@
         <article v-for="item in archives" :key="item.id" class="iias-card">
           <h3 class="iias-card-title">{{ item.title || '(タイトルなし)' }}</h3>
           <p v-if="item.url" class="iias-card-meta">{{ item.url }}</p>
+          <p v-if="bodyPreview(item)" class="iias-card-meta iias-body-preview">{{ bodyPreview(item) }}</p>
           <p v-if="item.memo" class="iias-card-meta">{{ item.memo }}</p>
           <p v-if="item.tags?.length" class="iias-card-meta">タグ: {{ item.tags.map(t => t.name).join(', ') }}</p>
           <p class="iias-card-meta">{{ formatDate(item.recorded_at) }}</p>
+          <button v-if="item.url && !item.body" class="iias-btn iias-btn-small" @click="onFetchBody(item)">本文取得</button>
         </article>
       </div>
     </template>
@@ -65,6 +69,20 @@ function formatDate(value) {
   if (!value) return ''
   const d = new Date(value)
   return d.toLocaleString('ja-JP')
+}
+
+function bodyPreview(item) {
+  if (!item.body) return ''
+  return item.body.length > 160 ? item.body.slice(0, 160) + '…' : item.body
+}
+
+async function onFetchBody(item) {
+  try {
+    const updated = await archivesApi.fetchBody(item.id)
+    item.body = updated.body || null
+  } catch {
+    alert('本文の取得に失敗しました')
+  }
 }
 
 function groupKey(date) {
