@@ -9,6 +9,7 @@
         <NuxtLink to="/regular" class="iias-nav-link">定番</NuxtLink>
         <NuxtLink to="/mindmap" class="iias-nav-link">マインドマップ</NuxtLink>
         <NuxtLink to="/settings" class="iias-nav-link">設定</NuxtLink>
+        <NuxtLink to="/qr-login" class="iias-nav-link">QRログイン</NuxtLink>
       </nav>
       <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #ff8a1c;">
         <p style="font-size: 0.8rem; margin: 0 0 0.5rem;">{{ user?.name }}</p>
