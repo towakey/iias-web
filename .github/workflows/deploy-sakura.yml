@@ -1,0 +1,50 @@
+name: Deploy iias-web to Sakura
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NUXT_PUBLIC_API_BASE_URL: ${{ vars.SAKURA_API_BASE_URL || 'https://kyosserver.sakura.ne.jp/iias-core/api' }}
+  NUXT_APP_BASE_URL: ${{ vars.SAKURA_WEB_BASE_URL || '/iias-web/' }}
+  NUXT_NITRO_PRESET: static
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate static site
+        run: pnpm generate
+
+      - name: Add SPA fallback .htaccess
+        run: cp deploy/sakura/.htaccess .output/public/.htaccess
+
+      - name: Deploy to Sakura server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SAKURA_HOST }}
+          username: ${{ secrets.SAKURA_USER }}
+          key: ${{ secrets.SAKURA_SSH_KEY }}
+          port: ${{ secrets.SAKURA_PORT || 22 }}
+          source: '.output/public/'
+          target: ${{ secrets.SAKURA_WEB_DIR || '/home/$USER/www/iias-web/' }}
+          strip_components: 2
+          rm: true

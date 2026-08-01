@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   srcDir: 'app/',
   compatibilityDate: '2025-07-15',
+  ssr: false,
   devtools: { enabled: false },
   experimental: {
     appManifest: false,
@@ -12,7 +13,13 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      apiBaseUrl: 'http://localhost:8000/api',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
     },
+  },
+  app: {
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
+  },
+  nitro: {
+    preset: process.env.NUXT_NITRO_PRESET || 'node-server',
   },
 })
