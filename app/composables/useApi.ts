@@ -5,9 +5,17 @@ type RefreshResponse = {
   token?: string
 }
 
-export function useApi() {
+function getBaseURL(): string {
+  if (import.meta.client) {
+    const saved = localStorage.getItem('iias_api_base_url')
+    if (saved) return saved.replace(/\/$/, '')
+  }
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBaseUrl as string
+  return (config.public.apiBaseUrl as string || '').replace(/\/$/, '')
+}
+
+export function useApi() {
+  const baseURL = getBaseURL()
 
   const token = useState<string | null>('api-token', () => null)
   const refreshToken = useState<string | null>('api-refresh-token', () => null)
